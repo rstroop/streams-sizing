@@ -31,27 +31,34 @@ Automation to deploy the AMQ Streams Monitoring Demo.
 
 To connect the applications from outside the OpenShift cluster you first need the certificate for the TLS connection:
 
-    PROJECT= kafka-cluster
+    PROJECT=kafka-cluster
     oc extract -n $PROJECT secret/my-cluster-cluster-ca-cert --keys ca.crt --to /tmp/
     keytool -keystore /tmp/client-truststore.jks -alias CARoot -import -file /tmp/ca.crt -storepass kafka1 -noprompt
 
 The keystore will be used by the applications to trust the certificate in the connection.
 
-To configure the application to access the Kafka cluster, we need information present
-
-    PROCESSOR_PWD=$(oc get secret processor -n $PROJECT -o jsonpath='{.data.password}' | base64 -d )
-    PRODUCER_PWD=$(oc get secret producer -n $PROJECT  -o jsonpath='{.data.password}' | base64 -d )
-    BOOTSTRAP_URL=$(oc get route my-cluster-kafka-bootstrap -n $PROJECT -o jsonpath='{.spec.host}'):443
 
 === Starting the Producer
 
+    PROJECT=kafka-cluster
+    PRODUCER_PWD=$(oc get secret producer -n $PROJECT  -o jsonpath='{.data.password}' | base64 -d )
+    BOOTSTRAP_URL=$(oc get route my-cluster-kafka-bootstrap -n $PROJECT -o jsonpath='{.spec.host}'):443
     mvn clean quarkus:dev -Dbootstrap.url=$BOOTSTRAP_URL  -Dproducer.pwd=$PRODUCER_PWD
 
 
 === Starting the Processor
 
+    PROJECT=kafka-cluster
+    PROCESSOR_PWD=$(oc get secret processor -n $PROJECT -o jsonpath='{.data.password}' | base64 -d )
+    BOOTSTRAP_URL=$(oc get route my-cluster-kafka-bootstrap -n $PROJECT -o jsonpath='{.spec.host}'):443
     mvn clean quarkus:dev -Dbootstrap.url=$BOOTSTRAP_URL  -Dprocessor.pwd=$PROCESSOR_PWD
 
 === Testing
+
+First monitor the stream output
+
+    curl  http://localhost:8080/quotes
+
+Then start sending requests
 
     curl  http://localhost:8080/quotes/request -X POST
