@@ -3,8 +3,8 @@
   vars:
     demo_delete: false
     cluster_project: kafka-cluster
-    grafana_user: root
-    grafana_password: secret
+    grafana_user: admin
+    grafana_password: admin
     insecure_skip_tls_verify: true
     delete_demo: false
   tasks:
