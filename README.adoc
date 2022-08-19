@@ -21,44 +21,57 @@ Automation to deploy the AMQ Streams Monitoring Demo.
 
 
 === Deploying the demo
+----
+token=REPLACE_ME
+server=REPLACE_ME
 
-    token=REPLACE_ME
-    server=REPLACE_ME
-    ansible-playbook -e token=${token} -e server=${server} playbook.yml
-
+ansible-playbook -e token=${token} -e server=${server} playbook.yml
+----
 
 == Using the applications
 
 To connect the applications from outside the OpenShift cluster you first need the certificate for the TLS connection:
 
-    PROJECT=kafka-cluster
-    oc extract -n $PROJECT secret/my-cluster-cluster-ca-cert --keys ca.crt --to /tmp/
-    keytool -keystore /tmp/client-truststore.jks -alias CARoot -import -file /tmp/ca.crt -storepass kafka1 -noprompt
+----
+PROJECT=kafka-cluster
+
+oc extract -n $PROJECT secret/my-cluster-cluster-ca-cert --keys ca.crt --to /tmp/
+keytool -keystore /tmp/client-truststore.jks -alias CARoot -import -file /tmp/ca.crt -storepass kafka1 -noprompt
+----
 
 The keystore will be used by the applications to trust the certificate in the connection.
 
 
 === Starting the Producer
 
-    PROJECT=kafka-cluster
-    PRODUCER_PWD=$(oc get secret producer -n $PROJECT  -o jsonpath='{.data.password}' | base64 -d )
-    BOOTSTRAP_URL=$(oc get route my-cluster-kafka-bootstrap -n $PROJECT -o jsonpath='{.spec.host}'):443
-    mvn clean quarkus:dev -Dbootstrap.url=$BOOTSTRAP_URL  -Dproducer.pwd=$PRODUCER_PWD
+----
+PROJECT=kafka-cluster
+PRODUCER_PWD=$(oc get secret producer -n $PROJECT  -o jsonpath='{.data.password}' | base64 -d )
+BOOTSTRAP_URL=$(oc get route my-cluster-kafka-bootstrap -n $PROJECT -o jsonpath='{.spec.host}'):443
 
+mvn clean quarkus:dev -Dbootstrap.url=$BOOTSTRAP_URL  -Dproducer.pwd=$PRODUCER_PWD
+----
 
 === Starting the Processor
 
-    PROJECT=kafka-cluster
-    PROCESSOR_PWD=$(oc get secret processor -n $PROJECT -o jsonpath='{.data.password}' | base64 -d )
-    BOOTSTRAP_URL=$(oc get route my-cluster-kafka-bootstrap -n $PROJECT -o jsonpath='{.spec.host}'):443
-    mvn clean quarkus:dev -Dbootstrap.url=$BOOTSTRAP_URL  -Dprocessor.pwd=$PROCESSOR_PWD
+----
+PROJECT=kafka-cluster
+PROCESSOR_PWD=$(oc get secret processor -n $PROJECT -o jsonpath='{.data.password}' | base64 -d )
+BOOTSTRAP_URL=$(oc get route my-cluster-kafka-bootstrap -n $PROJECT -o jsonpath='{.spec.host}'):443
+
+mvn clean quarkus:dev -Dbootstrap.url=$BOOTSTRAP_URL  -Dprocessor.pwd=$PROCESSOR_PWD
+----
 
 === Testing
 
 First monitor the stream output
 
-    curl  http://localhost:8080/quotes
+----
+curl  http://localhost:8080/quotes
+----
 
 Then start sending requests
 
-    curl  http://localhost:8080/quotes/request -X POST
+----
+curl  http://localhost:8080/quotes/request -X POST
+----

@@ -4,6 +4,8 @@ metadata:
   name: my-cluster
 spec:
   kafka:
+    rack:
+      topologyKey: topology.kubernetes.io/zone
     version: 3.1.0
     replicas: 3
     authorization:
@@ -38,20 +40,22 @@ spec:
       default.replication.factor: 3
       min.insync.replicas: 2
       inter.broker.protocol.version: "3.1"
-    # storage:
-    #   type: jbod
-    #   volumes:
-    #   - id: 0
-    #     type: persistent-claim
-    #     size: 3Gi
-    #     deleteClaim: false
-    # metricsConfig:
-    #   type: jmxPrometheusExporter
-    #   valueFrom:
-    #     configMapKeyRef:
-    #       name: kafka-metrics
-    #       key: kafka-metrics-config.yml
+    storage:
+      type: jbod
+      volumes:
+      - id: 0
+        type: persistent-claim
+        size: 3Gi
+        deleteClaim: false
+    metricsConfig:
+      type: jmxPrometheusExporter
+      valueFrom:
+        configMapKeyRef:
+          name: kafka-metrics
+          key: kafka-metrics-config.yml
   zookeeper:
+    rack:
+      topologyKey: topology.kubernetes.io/zone
     replicas: 3
     readinessProbe:
       initialDelaySeconds: 15
@@ -59,16 +63,16 @@ spec:
     livenessProbe:
       initialDelaySeconds: 15
       timeoutSeconds: 5
-    # storage:
-    #   type: persistent-claim
-    #   size: 3Gi
-    #   deleteClaim: false
-    # metricsConfig:
-    #   type: jmxPrometheusExporter
-    #   valueFrom:
-    #     configMapKeyRef:
-    #       name: kafka-metrics
-    #       key: zookeeper-metrics-config.yml
+    storage:
+      type: persistent-claim
+      size: 3Gi
+      deleteClaim: false
+    metricsConfig:
+      type: jmxPrometheusExporter
+      valueFrom:
+        configMapKeyRef:
+          name: kafka-metrics
+          key: zookeeper-metrics-config.yml
   entityOperator:
     topicOperator: {}
     userOperator: {}
