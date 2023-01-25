@@ -11,46 +11,11 @@
     namespace: '{{ cluster_project }}'
   register: secrets_list
 
-- name: get length of list
-  ansible.builtin.set_fact:
-    list_len: "{{ secrets_list.resources | length }}"
-
-- name: set an int
-  ansible.builtin.set_fact:
-    int_length: (list_len | int)
-
-- name: write list_len
-  ansible.builtin.debug:
-    var: int_length
-
-#- name: iterate over secrets list
-  #ansible.builtin.set_fact:
-  #  secret_name: "{{ secrets_list.resources[item]['metadata']['name'] }}"
-  #loop: "{{ query('sequence', 'start=0 end=int_length | string') }}"
-  #when: secrets_list.resources[item]['metadata']['name'] | regex_search('grafana-serviceaccount-token.*') != -1
-  #  until: secret_name is defined
-
-- name: debug 
-  ansible.builtin.debug:
-   #var: secrets_list.resources[0]['metadata']['name']
-    var: item | type_debug 
-  loop: "{{ secrets_list.resources }}"
-
-- name: debug 
-  ansible.builtin.debug:
-   #var: secrets_list.resources[0]['metadata']['name']
-    var: item['metadata']['name'] 
-  loop: "{{ secrets_list.resources }}"
-
 - name: Iterate over list of secrets until the correct string is found 
   ansible.builtin.set_fact:
     secret_name: "{{ item['metadata']['name'] }}"
   loop: "{{ secrets_list.resources }}"
   when: item['metadata']['name'] | regex_search('grafana-serviceaccount-token.')
-
-- name: debug discovered secret
-  ansible.builtin.debug:
-    var: secret_name
 
 - name: Get Grafana ServiceAccount Token
   k8s_info:

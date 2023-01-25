@@ -22,6 +22,10 @@ Automation to deploy the AMQ Streams Monitoring Demo.
 
 === Deploying the demo
 ----
+sudo yum install ansible
+sudo pip3 install openshift
+ansible-galaxy collection install kubernetes.core
+
 token=REPLACE_ME
 server=REPLACE_ME
 
