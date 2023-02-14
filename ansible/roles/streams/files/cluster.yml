@@ -6,7 +6,7 @@ spec:
   kafka:
     rack:
       topologyKey: topology.kubernetes.io/zone
-    version: 3.1.0
+    version: 3.3.1
     replicas: 3
     authorization:
       type: simple
