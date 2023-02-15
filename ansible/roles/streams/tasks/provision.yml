@@ -1,5 +1,8 @@
 - name: Evaluate {{ cluster_project }} Namespace
   k8s:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
     state: present
     kind: Project
     api_version: project.openshift.io/v1
@@ -13,6 +16,9 @@
 - name: Evaluate Operator Group
   when: not delete_demo
   k8s:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
     state: present
     api_version: operators.coreos.com/v1
     kind: OperatorGroup
@@ -26,6 +32,9 @@
 
 - name: Evaluate AMQ Streams Operator
   k8s:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
     state: present
     kind: Subscription
     api_version: operators.coreos.com/v1alpha1
@@ -39,59 +48,55 @@
         name: amq-streams
         source: redhat-operators
         sourceNamespace: openshift-marketplace
-        startingCSV: amqstreams.v2.0.0-0
 
-- name: Waiting for AMQ Streams operator to install
-  shell: set -o pipefail && oc get csv -n {{ cluster_project }} | grep amqstreams
-  register: install_status
-  until: "'Succeeded' in install_status.stdout"
-  retries: 20
-  delay: 15
-  args:
-    executable: /bin/bash
+- name: Wait for AMQ Streams operator to be running
+  k8s_info:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
+    api_version: v1
+    kind: Pod
+    namespace: '{{ cluster_project }}'
+    label_selectors:
+      - rht.comp=AMQ_Streams
+      - rht.subcomp=cluster-operator
+    field_selectors:
+      - status.phase=Running
+  register: r_streams_pod
+  retries: 10
+  delay: 10
+  until: r_streams_pod.resources | list | length == 1
 
 - name: Evaluate Cluster ConfigMap
   k8s:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
     state: present
     namespace: '{{ cluster_project }}'
     resource_definition: "{{ lookup('file', 'metrics-cm.yml') }}"
 
-
 - name: Evaluate Cluster Instance
   k8s:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
     state: present
     namespace: '{{ cluster_project }}'
     resource_definition: "{{ lookup('file', 'cluster.yml') }}"
 
-- name: Waiting for Cluster instance to be ready
-  shell: set -o pipefail && oc get kafka -n {{ cluster_project }} | grep my-cluster
-  register: install_status
-  until: "'True' in install_status.stdout"
-  retries: 20
-  delay: 15
-  args:
-    executable: /bin/bash
-
-- name: Evaluate User Producer
-  k8s:
-    state: present
+- name: Wait for AMQ Streams cluster to be running
+  k8s_info:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
+    api_version: v1
+    kind: Pod
     namespace: '{{ cluster_project }}'
-    resource_definition: "{{ lookup('file', 'producer-user.yml') }}"
-
-- name: Evaluate User Processor
-  k8s:
-    state: present
-    namespace: '{{ cluster_project }}'
-    resource_definition: "{{ lookup('file', 'processor-user.yml') }}"
-
-- name: Evaluate a_quotes Topic
-  k8s:
-    state: present
-    namespace: '{{ cluster_project }}'
-    resource_definition: "{{ lookup('file', 'quote-topic.yml') }}"
-
-- name: Evaluate a_quote_requests Topic
-  k8s:
-    state: present
-    namespace: '{{ cluster_project }}'
-    resource_definition: "{{ lookup('file', 'quote-request-topic.yml') }}"
+    name: my-cluster-kafka-2
+    field_selectors:
+      - status.phase=Running
+  register: r_streams_pod
+  retries: 10
+  delay: 10
+  until: r_streams_pod.resources | list | length == 1

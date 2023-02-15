@@ -3,10 +3,10 @@
   when:
   - not delete_demo
 
-# - name: Configure AMQ Streams
-#   include_tasks: configure.yml
-#   when:
-#   - not delete_demo
+- name: Configure AMQ Streams
+  include_tasks: configure.yml
+  when:
+  - not delete_demo
 
 # - name: Delete Monitoring
 #   include_tasks: delete.yml

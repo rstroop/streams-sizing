@@ -15,8 +15,8 @@ Automation to deploy the AMQ Streams Monitoring Demo.
 [options="header"]
 |=======================
 | Parameter | Example Value                                      | Definition
-| token | sha256~vFanQbthlPKfsaldJT3bdLXIyEkd7ypO_XPygY1DNtQ | access token for a user with cluster-admin privileges
-| server    | https://api.mycluster.opentlc.com:6443      | OpenShift cluster API URL
+| token     | sha256~vFanQbthlPKfsaldJT3bdLXIyEkd7ypO_XPygY1DNtQ | access token for a user with cluster-admin privileges
+| server    | https://api.mycluster.opentlc.com:6443             | OpenShift cluster API URL
 |=======================
 
 

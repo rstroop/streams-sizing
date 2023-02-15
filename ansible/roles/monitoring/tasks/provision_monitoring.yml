@@ -1,5 +1,8 @@
 - name: Evaluate User Workload Monitoring
   k8s:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
     state: present
     kind: ConfigMap
     api_version: v1
@@ -13,6 +16,9 @@
 
 - name: Evaluate Grafana Operator
   k8s:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
     state: present
     kind: Subscription
     api_version: operators.coreos.com/v1alpha1
@@ -28,16 +34,44 @@
         sourceNamespace: openshift-marketplace
         startingCSV: grafana-operator.v4.2.0
 
-- name: Wait for Grafana Subscription to complete
-  shell: set -o pipefail && oc get csv -n {{ cluster_project }} | grep grafana-operator
-  register: install_status
-  until: "'Succeeded' in install_status.stdout"
+- name: Wait Grafana Operator
+  k8s_info:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
+    api_version: v1
+    kind: Pod
+    namespace: '{{ cluster_project }}'
+    label_selectors:
+      - control-plane = controller-manager
+    field_selectors:
+      - status.phase=Running
+  register: r_grafana_pod
   retries: 20
-  delay: 15
-  args:
-    executable: /bin/bash
+  delay: 10
+  until: r_grafana_pod.resources | list | length == 1
 
 - name: Evaluate Grafana Instance
   k8s:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
     state: present
     resource_definition: "{{ lookup('template', 'grafana_instance.yml.j2') }}"
+
+- name: Wait Grafana Instance
+  k8s_info:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
+    api_version: v1
+    kind: Pod
+    namespace: '{{ cluster_project }}'
+    label_selectors:
+      - app = grafana
+    field_selectors:
+      - status.phase=Running
+  register: r_grafana_pod
+  retries: 20
+  delay: 10
+  until: r_grafana_pod.resources | list | length == 1

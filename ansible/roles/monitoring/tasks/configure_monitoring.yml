@@ -1,17 +1,23 @@
 - name: Evaluate Pod Monitor
   k8s:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
     state: present
     namespace: '{{ cluster_project}}'
     resource_definition: "{{ lookup('template', 'strimzi_pod_monitor.yml.j2') }}"
 
 - name: Get a list of all Secret objects
   kubernetes.core.k8s_info:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
     api_version: v1
     kind: Secret
     namespace: '{{ cluster_project }}'
   register: secrets_list
 
-- name: Iterate over list of secrets until the correct string is found 
+- name: Iterate over list of secrets until the correct string is found
   ansible.builtin.set_fact:
     secret_name: "{{ item['metadata']['name'] }}"
   loop: "{{ secrets_list.resources }}"
@@ -19,6 +25,9 @@
 
 - name: Get Grafana ServiceAccount Token
   k8s_info:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
     kind: Secret
     name:  "{{ secret_name }}"
     namespace: '{{ cluster_project }}'
@@ -37,6 +46,9 @@
 
 - name: Evaluate Grafana ServiceAccount permissons
   k8s:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
     state: present
     api_version: rbac.authorization.k8s.io/v1
     kind: ClusterRoleBinding
@@ -54,11 +66,17 @@
 
 - name: Evaluate Grafana Datasource
   k8s:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
     state: present
     resource_definition: "{{ lookup('template', 'grafana_datasource.yml.j2') }}"
 
 - name: Evaluate Kafka Dashboard
   k8s:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
     state: present
     namespace: '{{ cluster_project}}'
     resource_definition: "{{ lookup('file', 'grafana_kafka_dashboard.yml') }}"
