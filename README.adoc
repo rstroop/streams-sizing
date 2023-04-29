@@ -23,18 +23,32 @@ Automation to deploy the AMQ Streams Monitoring Demo.
 === Deploying the demo
 ----
 sudo yum install ansible
-sudo pip3 install openshift
+sudo pip3.9 install openshift
 ansible-galaxy collection install kubernetes.core
 
 token=REPLACE_ME
 server=REPLACE_ME
 
+cd ansible
 ansible-playbook -e token=${token} -e server=${server} playbook.yml
 ----
 
 == Using the applications
 
-To connect the applications from outside the OpenShift cluster you first need the certificate for the TLS connection:
+To connect the applications from outside the OpenShift cluster you first need to install Java and Maven
+
+----
+sudo yum install java-11-openjdk-devel
+
+wget https://dlcdn.apache.org/maven/maven-3/3.9.1/binaries/apache-maven-3.9.1-bin.tar.gz
+tar xvf apache-maven-3.9.1-bin.tar.gz
+sudo mv apache-maven-3.9.1 /usr/local/apache-maven
+export M2_HOME=/usr/local/apache-maven
+export M2=$M2_HOME/bin 
+export PATH=$M2:$PATH
+----
+
+Then you need to get the certificate for the TLS connection:
 
 ----
 PROJECT=kafka-cluster
