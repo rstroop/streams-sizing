@@ -4,6 +4,18 @@ metadata:
   name: my-cluster
 spec:
   kafka:
+    template:
+      pod:
+        affinity:
+          podAntiAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              - labelSelector:
+                  matchExpressions:
+                    - key: strimzi.io/name
+                      operator: In
+                      values:
+                        - my-cluster-kafka
+                topologyKey: kubernetes.io/hostname
     rack:
       topologyKey: topology.kubernetes.io/zone
     version: 3.3.1
@@ -26,7 +38,7 @@ spec:
         type: route
         tls: true
         authentication:
-          type: scram-sha-512
+          type: tls
     readinessProbe:
       initialDelaySeconds: 15
       timeoutSeconds: 5
@@ -38,14 +50,14 @@ spec:
       transaction.state.log.replication.factor: 3
       transaction.state.log.min.isr: 2
       default.replication.factor: 3
-      min.insync.replicas: 2
-      inter.broker.protocol.version: "3.1"
+      min.insync.replicas: 1
+      inter.broker.protocol.version: "3.3.1"
     storage:
       type: jbod
       volumes:
       - id: 0
         type: persistent-claim
-        size: 3Gi
+        size: 100Gi
         deleteClaim: false
     metricsConfig:
       type: jmxPrometheusExporter
@@ -76,6 +88,7 @@ spec:
   entityOperator:
     topicOperator: {}
     userOperator: {}
+  cruiseControl: {}
   kafkaExporter:
     topicRegex: ".*"
     groupRegex: ".*"
