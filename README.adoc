@@ -65,7 +65,7 @@ Then to connect the applications from outside the OpenShift cluster you need to 
 ----
 PROJECT=kafka-cluster
 
-oc extract -n $PROJECT secret/my-cluster-cluster-ca-cert --keys ca.crt --to /tmp/
+oc extract -n $PROJECT secret/my-cluster-cluster-ca-cert --keys ca.crt --to /tmp/ --confirm
 keytool -keystore /tmp/client-truststore.jks -alias CARoot -import -file /tmp/ca.crt -storepass kafka1 -noprompt
 ----
 
@@ -77,10 +77,10 @@ The keystore will be used by the applications to trust the broker in the connect
 In order for the broker to trust the generator we need to get the client cert as well
 
 ----
-oc extract -n $PROJECT secret/generator --keys user.p12 --to /tmp/generator.p12
+oc extract -n $PROJECT secret/generator --keys user.p12 --to /tmp/ --confirm
 GENERATOR_PWD=$(oc get secret generator -n $PROJECT  -o jsonpath='{.data.user\.password}' | base64 -d )
 
-keytool -importkeystore -srckeystore /tmp/generator.p12 -srcstoretype pkcs12 -srcstorepass $GENERATOR_PWD -srcalias generator -destkeystore /tmp/generator-keystore.jks -deststoretype jks -deststorepass kafka1 -destalias generator
+keytool -importkeystore -srckeystore /tmp/user.p12 -srcstoretype pkcs12 -srcstorepass $GENERATOR_PWD -srcalias generator -destkeystore /tmp/generator-keystore.jks -deststoretype jks -deststorepass kafka1 -destalias generator
 ----
 
 Now we tell the application where Kafka is and start it (make sure you are in the generator directory under the quarkus folder)
@@ -115,10 +115,10 @@ We already have the keystore for the broker, but we'll need to get the client ce
 
 ----
 PROJECT=kafka-cluster
-oc extract -n $PROJECT secret/transformer --keys user.p12 --to /tmp/transformer.p12
+oc extract -n $PROJECT secret/transformer --keys user.p12 --to /tmp/ --confirm
 TRANSFORMER_PWD=$(oc get secret transformer -n $PROJECT  -o jsonpath='{.data.user\.password}' | base64 -d )
 
-keytool -importkeystore -srckeystore /tmp/transformer.p12 -srcstoretype pkcs12 -srcstorepass $TRANSFORMER_PWD -srcalias transformer -destkeystore /tmp/transformer-keystore.jks -deststoretype jks -deststorepass kafka1 -destalias transformer
+keytool -importkeystore -srckeystore /tmp/user.p12 -srcstoretype pkcs12 -srcstorepass $TRANSFORMER_PWD -srcalias transformer -destkeystore /tmp/transformer-keystore.jks -deststoretype jks -deststorepass kafka1 -destalias transformer
 ----
 
 Now we tell the application where Kafka is and start it (make sure you are in the transformer directory under the quarkus folder)

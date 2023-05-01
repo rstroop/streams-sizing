@@ -12,10 +12,20 @@ spec:
     acls:
       - host: '*'
         operations:
+          - Read
           - Write
           - Describe
         resource:
           name: usd-prices
+          patternType: literal
+          type: topic
+      - host: '*'
+        operations:
+          - Read
+          - Describe
+          - Create
+        resource:
+          name: eur-prices
           patternType: literal
           type: topic
       - host: '*'
