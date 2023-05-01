@@ -1,0 +1,37 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaUser
+metadata:
+  name: transformer
+  labels:
+    strimzi.io/cluster: my-cluster
+  namespace: kafka-cluster
+spec:
+  authentication:
+    type: tls
+  authorization:
+    acls:
+      - host: '*'
+        operations:
+          - Read
+          - Describe
+        resource:
+          name: usd-prices
+          patternType: literal
+          type: topic
+      - host: '*'
+        operations:
+          - Write
+          - Describe
+          - Create
+        resource:
+          name: eur-prices
+          patternType: literal
+          type: topic
+      - host: '*'
+        operations:
+          - Read
+        resource:
+          name: price-transformer
+          patternType: literal
+          type: group
+    type: simple

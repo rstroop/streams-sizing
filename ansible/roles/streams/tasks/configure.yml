@@ -1,35 +1,27 @@
-- name: Evaluate User Producer
+- name: Evaluate Generator User
   k8s:
     api_key: '{{ token }}'
     host: '{{ server }}'
     validate_certs: false
     state: present
     namespace: '{{ cluster_project }}'
-    resource_definition: "{{ lookup('file', 'producer-user.yml') }}"
+    resource_definition: "{{ lookup('file', 'generator-user.yml') }}"
 
-- name: Evaluate User Processor
+- name: Evaluate Transformer User
   k8s:
     api_key: '{{ token }}'
     host: '{{ server }}'
     validate_certs: false
     state: present
     namespace: '{{ cluster_project }}'
-    resource_definition: "{{ lookup('file', 'processor-user.yml') }}"
+    resource_definition: "{{ lookup('file', 'transformer-user.yml') }}"
 
-- name: Evaluate a_quotes Topic
+- name: Evaluate USD Prices Topic
   k8s:
     api_key: '{{ token }}'
     host: '{{ server }}'
     validate_certs: false
     state: present
     namespace: '{{ cluster_project }}'
-    resource_definition: "{{ lookup('file', 'quote-topic.yml') }}"
+    resource_definition: "{{ lookup('file', 'usd-prices-topic.yml') }}"
 
-- name: Evaluate a_quote_requests Topic
-  k8s:
-    api_key: '{{ token }}'
-    host: '{{ server }}'
-    validate_certs: false
-    state: present
-    namespace: '{{ cluster_project }}'
-    resource_definition: "{{ lookup('file', 'quote-request-topic.yml') }}"
