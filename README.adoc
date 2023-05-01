@@ -12,6 +12,8 @@ Automation to deploy the AMQ Streams Monitoring Demo.
 
 === Parameters
 
+To get these parameters log into OpenShift and select "Copy login command" from the top right dropdown menu of your username. After you are asked to log in one more time, you will be presented with your token and server name.
+
 [options="header"]
 |=======================
 | Parameter | Example Value                                      | Definition
@@ -21,6 +23,11 @@ Automation to deploy the AMQ Streams Monitoring Demo.
 
 
 === Deploying the demo
+
+Provision an OpenShift 4.12 Workshop from demo.redhat.com
+
+SSH into the Bastion host and clone this repository, then run the following commands
+
 ----
 sudo yum install ansible
 sudo pip3.9 install openshift
@@ -28,14 +35,17 @@ ansible-galaxy collection install kubernetes.core
 
 token=REPLACE_ME
 server=REPLACE_ME
+----
 
-cd ansible
+change directory into the 'ansible' folder of the project before running the playbook
+
+----
 ansible-playbook -e token=${token} -e server=${server} playbook.yml
 ----
 
-== Using the applications
+== Using the quarkus applications
 
-To connect the applications from outside the OpenShift cluster you first need to install Java and Maven
+To build the applications you first need to install Java and Maven
 
 ----
 sudo yum install java-11-openjdk-devel
@@ -48,7 +58,9 @@ export M2=$M2_HOME/bin
 export PATH=$M2:$PATH
 ----
 
-Then you need to get the certificate for the TLS connection:
+It's a good idea to add the last three export lines to your ~/.bashrc file if you don't want to type them again when we create another SSH connection
+
+Then to connect the applications from outside the OpenShift cluster you need to get the certificates for the TLS connections
 
 ----
 PROJECT=kafka-cluster
@@ -57,39 +69,64 @@ oc extract -n $PROJECT secret/my-cluster-cluster-ca-cert --keys ca.crt --to /tmp
 keytool -keystore /tmp/client-truststore.jks -alias CARoot -import -file /tmp/ca.crt -storepass kafka1 -noprompt
 ----
 
-The keystore will be used by the applications to trust the certificate in the connection.
+The keystore will be used by the applications to trust the broker in the connection.
 
 
-=== Starting the Producer
+=== Starting the Generator
+
+In order for the broker to trust the generator we need to get the client cert as well
+
+----
+oc extract -n $PROJECT secret/generator --keys user.p12 --to /tmp/generator.p12
+GENERATOR_PWD=$(oc get secret generator -n $PROJECT  -o jsonpath='{.data.user\.password}' | base64 -d )
+
+keytool -importkeystore -srckeystore /tmp/generator.p12 -srcstoretype pkcs12 -srcstorepass $GENERATOR_PWD -srcalias generator -destkeystore /tmp/generator-keystore.jks -deststoretype jks -deststorepass kafka1 -destalias generator
+----
+
+Now we tell the application where Kafka is and start it (make sure you are in the generator directory under the quarkus folder)
+
+----
+BOOTSTRAP_URL=$(oc get route my-cluster-kafka-bootstrap -n $PROJECT -o jsonpath='{.spec.host}'):443
+
+mvn clean quarkus:dev -Dbootstrap.url=$BOOTSTRAP_URL  -Dgenerator.pwd=$GENERATOR_PWD
+----
+
+This will start quarkus in dev mode and host an web application on the bastion server. In order to access it on your machine we will use SSH port forwarding in another terminal
+
+----
+ssh -L 8080:localhost:8080 lab-user@bastion.[USE_YOUR_BASTION_HOST].opentlc.com
+----
+
+Now you will be able to go to a browser on your machine and visit localhost:8080 to see the application.
+
+=== Starting the Transformer
+
+We will start the transformer in the new  terminal we just opened to create the SSH tunnel
+
+If you did not add the export commands to your ~/.bashrc file then you will need to run them again now
+
+----
+export M2_HOME=/usr/local/apache-maven
+export M2=$M2_HOME/bin 
+export PATH=$M2:$PATH
+----
+
+We already have the keystore for the broker, but we'll need to get the client cert for the transformer
 
 ----
 PROJECT=kafka-cluster
-PRODUCER_PWD=$(oc get secret producer -n $PROJECT  -o jsonpath='{.data.password}' | base64 -d )
+oc extract -n $PROJECT secret/transformer --keys user.p12 --to /tmp/transformer.p12
+TRANSFORMER_PWD=$(oc get secret transformer -n $PROJECT  -o jsonpath='{.data.user\.password}' | base64 -d )
+
+keytool -importkeystore -srckeystore /tmp/transformer.p12 -srcstoretype pkcs12 -srcstorepass $TRANSFORMER_PWD -srcalias transformer -destkeystore /tmp/transformer-keystore.jks -deststoretype jks -deststorepass kafka1 -destalias transformer
+----
+
+Now we tell the application where Kafka is and start it (make sure you are in the transformer directory under the quarkus folder)
+
+----
 BOOTSTRAP_URL=$(oc get route my-cluster-kafka-bootstrap -n $PROJECT -o jsonpath='{.spec.host}'):443
 
-mvn clean quarkus:dev -Dbootstrap.url=$BOOTSTRAP_URL  -Dproducer.pwd=$PRODUCER_PWD
+mvn clean quarkus:dev -Dbootstrap.url=$BOOTSTRAP_URL  -Dtransformer.pwd=$TRANSFORMER_PWD
 ----
 
-=== Starting the Processor
-
-----
-PROJECT=kafka-cluster
-PROCESSOR_PWD=$(oc get secret processor -n $PROJECT -o jsonpath='{.data.password}' | base64 -d )
-BOOTSTRAP_URL=$(oc get route my-cluster-kafka-bootstrap -n $PROJECT -o jsonpath='{.spec.host}'):443
-
-mvn clean quarkus:dev -Dbootstrap.url=$BOOTSTRAP_URL  -Dprocessor.pwd=$PROCESSOR_PWD
-----
-
-=== Testing
-
-First monitor the stream output
-
-----
-curl  http://localhost:8080/quotes
-----
-
-Then start sending requests
-
-----
-curl  http://localhost:8080/quotes/request -X POST
-----
+You can now go back to the app running on your local machine and you should see the EUR column updating.

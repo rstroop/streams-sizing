@@ -1,1 +1,1 @@
-# Price Generator & Viewer Kafka Application
+# Price Generator for Kafka & Viewer Application
