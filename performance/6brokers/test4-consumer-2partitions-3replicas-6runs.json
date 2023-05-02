@@ -22,7 +22,7 @@
                             "--topic",
                             "2partitions-3replicas",
                             "--messages",
-                            "15000000",
+                            "30000000",
                             "--bootstrap-server",
                             "my-cluster-kafka-bootstrap.kafka-cluster.svc.cluster.local:9092",
                             "--show-detailed-stats"

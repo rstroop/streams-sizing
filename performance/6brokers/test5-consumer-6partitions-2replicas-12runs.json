@@ -5,7 +5,7 @@
         "labels": {
             "load-test": "consumer"
         },
-        "name": "6partitions-2replicas-12runs-consumer"
+        "name": "test5-6partitions-2replicas-12runs-consumer"
     },
     "spec": {
         "activeDeadlineSeconds": 86400,
@@ -22,7 +22,7 @@
                             "--topic",
                             "6partitions-2replicas",
                             "--messages",
-                            "15000000",
+                            "60000000",
                             "--bootstrap-server",
                             "my-cluster-kafka-bootstrap.kafka-cluster.svc.cluster.local:9092",
                             "--show-detailed-stats"
