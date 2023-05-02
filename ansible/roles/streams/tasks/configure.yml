@@ -25,3 +25,20 @@
     namespace: '{{ cluster_project }}'
     resource_definition: "{{ lookup('file', 'usd-prices-topic.yml') }}"
 
+- name: Evaluate One Partition Topic
+  k8s:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
+    state: present
+    namespace: '{{ cluster_project }}'
+    resource_definition: "{{ lookup('file', '1partition-3replicas-topic.yml') }}"
+
+- name: Evaluate Three Partitions Topic
+  k8s:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
+    state: present
+    namespace: '{{ cluster_project }}'
+    resource_definition: "{{ lookup('file', '3partitions-2replicas-topic.yml') }}"

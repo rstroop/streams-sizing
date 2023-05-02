@@ -1,0 +1,47 @@
+{
+    "apiVersion": "batch/v1",
+    "kind": "Job",
+    "metadata": {
+        "labels": {
+            "load-test": "consumer"
+        },
+        "name": "test6-12partitions-2replicas-24runs-consumer"
+    },
+    "spec": {
+        "activeDeadlineSeconds": 86400,
+        "completions": 24,
+        "parallelism": 24,
+        "template": {
+            "metadata": {
+                "name": "12partitions-2replicas-24runs-consumer-job"
+            },
+            "spec": {
+                "containers": [
+                    {
+                        "args": [
+                            "--topic",
+                            "12partitions-2replicas",
+                            "--messages",
+                            "15000000",
+                            "--bootstrap-server",
+                            "my-cluster-kafka-bootstrap.kafka-cluster.svc.cluster.local:9092",
+                            "--show-detailed-stats"
+                        ],
+                        "command": [
+                            "./bin/kafka-consumer-perf-test.sh"
+                        ],
+                        "env": [
+                            {
+                                "name": "LOAD_TEST_TYPE",
+                                "value": "consumer"
+                            }
+                        ],
+                        "image": "registry.redhat.io/amq7/amq-streams-kafka-33-rhel8:2.3.0-5.1679485372",
+                        "name": "12partitions-2replicas-24runs-consumer"
+                    }
+                ],
+                "restartPolicy": "Never"
+            }
+        }
+    }
+}

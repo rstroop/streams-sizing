@@ -126,7 +126,7 @@ Now we tell the application where Kafka is and start it (make sure you are in th
 ----
 BOOTSTRAP_URL=$(oc get route my-cluster-kafka-bootstrap -n $PROJECT -o jsonpath='{.spec.host}'):443
 
-mvn clean quarkus:dev -Dbootstrap.url=$BOOTSTRAP_URL  -Dtransformer.pwd=$TRANSFORMER_PWD
+mvn clean quarkus:dev -Dbootstrap.url=$BOOTSTRAP_URL  -Dtransformer.pwd=$TRANSFORMER_PWD -Ddebug=5006
 ----
 
 You can now go back to the app running on your local machine and you should see the EUR column updating.

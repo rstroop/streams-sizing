@@ -31,7 +31,7 @@ spec:
         operations:
           - Read
         resource:
-          name: price-transformer
+          name: prices-transformer
           patternType: literal
           type: group
     type: simple

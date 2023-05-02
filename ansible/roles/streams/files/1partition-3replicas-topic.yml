@@ -1,0 +1,13 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  labels:
+    strimzi.io/cluster: my-cluster
+  name: 1partition-3replicas
+  namespace: kafka-cluster
+spec:
+  config:
+    retention.ms: 30000
+    segment.bytes: 1073741824
+  partitions: 1
+  replicas: 3

@@ -1,0 +1,51 @@
+{
+    "apiVersion": "batch/v1",
+    "kind": "Job",
+    "metadata": {
+        "labels": {
+            "load-test": "producer"
+        },
+        "name": "test2-1partition-3replicas-3runs-producer"
+    },
+    "spec": {
+        "activeDeadlineSeconds": 86400,
+        "completions": 3,
+        "parallelism": 3,
+        "template": {
+            "metadata": {
+                "name": "1partition-3replicas-3runs-producer-job"
+            },
+            "spec": {
+                "containers": [
+                    {
+                        "args": [
+                            "--topic",
+                            "1partition-3replicas",
+                            "--num-records",
+                            "15000000",
+                            "--record-size",
+                            "500",
+                            "--producer-props",
+                            "bootstrap.servers=my-cluster-kafka-bootstrap.kafka-cluster.svc.cluster.local:9092",
+                            "batch.size=1048576",
+                            "linger.ms=10",
+                            "--throughput=-1"
+                        ],
+                        "command": [
+                            "./bin/kafka-producer-perf-test.sh"
+                        ],
+                        "env": [
+                            {
+                                "name": "LOAD_TEST_TYPE",
+                                "value": "producer"
+                            }
+                        ],
+                        "image": "registry.redhat.io/amq7/amq-streams-kafka-33-rhel8:2.3.0-5.1679485372",
+                        "name": "1partition-3replicas-3runs-producer"
+                    }
+                ],
+                "restartPolicy": "Never"
+            }
+        }
+    }
+}
