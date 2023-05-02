@@ -5,22 +5,22 @@
         "labels": {
             "load-test": "consumer"
         },
-        "name": "test2-1partition-3replicas-9runs-consumer"
+        "name": "test3-3partitions-2replicas-6runs-consumer"
     },
     "spec": {
         "activeDeadlineSeconds": 86400,
-        "completions": 9,
-        "parallelism": 9,
+        "completions": 6,
+        "parallelism": 6,
         "template": {
             "metadata": {
-                "name": "1partition-3replicas-9runs-consumer-job"
+                "name": "3partitions-2replicas-6runs-consumer-job"
             },
             "spec": {
                 "containers": [
                     {
                         "args": [
                             "--topic",
-                            "1partition-3replicas",
+                            "3partitions-2replicas",
                             "--messages",
                             "15000000",
                             "--bootstrap-server",
@@ -37,7 +37,7 @@
                             }
                         ],
                         "image": "registry.redhat.io/amq7/amq-streams-kafka-33-rhel8:2.3.0-5.1679485372",
-                        "name": "1partition-3replicas-9runs-consumer"
+                        "name": "3partitions-2replicas-6runs-consumer"
                     }
                 ],
                 "restartPolicy": "Never"
