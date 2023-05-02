@@ -22,7 +22,7 @@
                             "--topic",
                             "12partitions-2replicas",
                             "--num-records",
-                            "60000000",
+                            "40000000",
                             "--record-size",
                             "500",
                             "--producer-props",
