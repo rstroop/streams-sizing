@@ -3,7 +3,45 @@ kind: Kafka
 metadata:
   name: my-cluster
 spec:
+  cruiseControl: {}
+  entityOperator:
+    topicOperator: {}
+    userOperator: {}
   kafka:
+    config:
+      num.network.threads: 9
+      log.flush.interval.messages: 922337203685477600
+      socket.receive.buffer.bytes: 1048576
+      inter.broker.protocol.version: 3.5.0
+      socket.request.max.bytes: 104857600
+      socket.send.buffer.bytes: 1048576
+      transaction.state.log.replication.factor: 3
+      num.io.threads: 24
+      min.insync.replicas: 1
+      replica.socket.receive.buffer.bytes: 1048576
+      transaction.state.log.min.isr: 2
+      offsets.topic.replication.factor: 3
+      default.replication.factor: 3
+    metricsConfig:
+      type: jmxPrometheusExporter
+      valueFrom:
+        configMapKeyRef:
+          key: kafka-metrics-config.yml
+          name: kafka-metrics
+    resources:
+      limits:
+        cpu: '8'
+      requests:
+        cpu: '6'
+    readinessProbe:
+      initialDelaySeconds: 15
+      timeoutSeconds: 5
+    livenessProbe:
+      initialDelaySeconds: 15
+      timeoutSeconds: 5
+    rack:
+      topologyKey: topology.kubernetes.io/zone
+    version: 3.5.0
     template:
       pod:
         affinity:
@@ -16,73 +54,56 @@ spec:
                       values:
                         - my-cluster-kafka
                 topologyKey: kubernetes.io/hostname
-    rack:
-      topologyKey: topology.kubernetes.io/zone
-    version: 3.3.1
+    storage:
+      type: jbod
+      volumes:
+        - deleteClaim: false
+          id: 0
+          size: 50Gi
+          type: persistent-claim
+        - deleteClaim: false
+          id: 1
+          size: 50Gi
+          type: persistent-claim
+        - deleteClaim: false
+          id: 2
+          size: 50Gi
+          type: persistent-claim
     replicas: 3
     authorization:
       type: simple
+    jvmOptions:
+      '-Xms': 8192m
+      '-Xmx': 8192m
     listeners:
       - name: plain
         port: 9092
-        type: internal
         tls: false
+        type: internal
       - name: external
         port: 9094
         type: route
         tls: true
         authentication:
           type: tls
-    readinessProbe:
-      initialDelaySeconds: 15
-      timeoutSeconds: 5
-    livenessProbe:
-      initialDelaySeconds: 15
-      timeoutSeconds: 5
-    config:
-      offsets.topic.replication.factor: 3
-      transaction.state.log.replication.factor: 3
-      transaction.state.log.min.isr: 2
-      default.replication.factor: 3
-      min.insync.replicas: 1
-      inter.broker.protocol.version: "3.3.1"
-    storage:
-      type: jbod
-      volumes:
-      - id: 0
-        type: persistent-claim
-        size: 100Gi
-        deleteClaim: false
-    metricsConfig:
-      type: jmxPrometheusExporter
-      valueFrom:
-        configMapKeyRef:
-          name: kafka-metrics
-          key: kafka-metrics-config.yml
-  zookeeper:
-    rack:
-      topologyKey: topology.kubernetes.io/zone
-    replicas: 3
-    readinessProbe:
-      initialDelaySeconds: 15
-      timeoutSeconds: 5
-    livenessProbe:
-      initialDelaySeconds: 15
-      timeoutSeconds: 5
-    storage:
-      type: persistent-claim
-      size: 3Gi
-      deleteClaim: false
-    metricsConfig:
-      type: jmxPrometheusExporter
-      valueFrom:
-        configMapKeyRef:
-          name: kafka-metrics
-          key: zookeeper-metrics-config.yml
-  entityOperator:
-    topicOperator: {}
-    userOperator: {}
-  cruiseControl: {}
   kafkaExporter:
-    topicRegex: ".*"
-    groupRegex: ".*"
+    groupRegex: .*
+    topicRegex: .*
+  zookeeper:
+    livenessProbe:
+      initialDelaySeconds: 15
+      timeoutSeconds: 5
+    metricsConfig:
+      type: jmxPrometheusExporter
+      valueFrom:
+        configMapKeyRef:
+          key: zookeeper-metrics-config.yml
+          name: kafka-metrics
+    readinessProbe:
+      initialDelaySeconds: 15
+      timeoutSeconds: 5
+    replicas: 3
+    storage:
+      deleteClaim: false
+      size: 150Gi
+      type: persistent-claim

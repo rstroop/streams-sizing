@@ -1,0 +1,48 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  labels:
+    load-test: producer
+  name: test-name-that-describes-the-topic-and-variables
+spec:
+  activeDeadlineSeconds: 86400
+  completions: 8
+  parallelism: 8
+  template:
+    metadata:
+      name: performance-test-job-name
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: strimzi.io/name
+                    operator: In
+                    values:
+                      - my-cluster-kafka
+              topologyKey: kubernetes.io/hostname
+      containers:
+      - args:
+        - --topic
+        - 3partitions-3replicas
+        - --num-records
+        - "90000000"
+        - --record-size
+        - "500"
+        - --producer-props
+        - bootstrap.servers=my-cluster-kafka-bootstrap.kafka-cluster.svc.cluster.local:9092
+        - batch.size=1048576
+        - linger.ms=10
+        - --throughput=40000
+        command:
+        - ./bin/kafka-producer-perf-test.sh
+        env:
+        - name: LOAD_TEST_TYPE
+          value: producer
+        image: registry.redhat.io/amq7/amq-streams-kafka-33-rhel8:2.3.0-5.1679485372
+        imagePullPolicy: IfNotPresent
+        name: performance-test-container-name
+      restartPolicy: Never
+      securityContext: {}
+      terminationGracePeriodSeconds: 30

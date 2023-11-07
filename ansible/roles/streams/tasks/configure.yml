@@ -42,3 +42,12 @@
     state: present
     namespace: '{{ cluster_project }}'
     resource_definition: "{{ lookup('file', '3partitions-2replicas-topic.yml') }}"
+
+- name: Evaluate Performance Topic
+  k8s:
+    api_key: '{{ token }}'
+    host: '{{ server }}'
+    validate_certs: false
+    state: present
+    namespace: '{{ cluster_project }}'
+    resource_definition: "{{ lookup('file', '3partitions-3replicas-topic.yml') }}"

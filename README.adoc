@@ -130,3 +130,24 @@ mvn clean quarkus:dev -Dbootstrap.url=$BOOTSTRAP_URL  -Dtransformer.pwd=$TRANSFO
 ----
 
 You can now go back to the app running on your local machine and you should see the EUR column updating.
+
+== Running Performance Tests
+
+If you'd like to run performance tests you will need to modify the cluster slightly. You can either modify the cluster on OpenShift or in the Ansible file, but you must remove the lines:
+
+----
+     authorization:
+       type: simple
+----
+
+You can find the yaml file on OpenShift in the namespace kafka-cluster. Go to Installed Operators -> AMQ Streams -> Kafka -> my-cluster -> yaml and then remove those two lines. The cluster should restart itself once you save.
+
+You could instead edit the file in this project under ansible/roles/streams/files/cluster.yaml and remove those two lines. Afterwards, you will have to run the playbook again and wait for it to take effect.
+
+Once the cluster is updated you can navigate to the performance folder and run the test template using:
+
+----
+oc apply -f template.yaml
+----
+
+You can modify any of the fields in that template to suit your test. By default it will use the 3partitions-3replicas topic, but you can modify that as well from within the file. You'll see a few folders there from where I was running larger tests on larger numbers of brokers. Feel free to use any of those as well, but make sure you scale your brokers and create new topics so they are balanced for the tests. For most use cases, 3 brokers will be enough to test the results of different configurations on latency and cpu/memory usage. Make sure to allocate extra disks and enough disk space for the amount of data you plan to send. If the disks get full, they will break AMQ Streams and the PVs must be manually deleted to repair it. In most of my tests on AWS disks, I found that CPU usage was roughly equal to about 60MB/s per core per disk. This maxed out the IOPS which often caused massive fluctuations in performance. The brokers performed much better when I used 45MB/s per core per disk as my throughput. This allowed the brokers to withstand bursts, handle version mismatches, compress topics, and even tolerate a short term broker failure (such as an update) without breaking. Feel free to test your own configuration choices, but if you're looking for a good starting point or a great estimate I recommend going with Kafka brokers sized at 4 cores, at least 3 Disks, as much Memory as you want and then adding one broker for every 45MB/s (assuming your replica factor is 3 and you don't have less than 3 brokers).
